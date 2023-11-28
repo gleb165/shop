@@ -1,20 +1,28 @@
-from fastapi import FastAPI
-from enum import Enum
+from fastapi import FastAPI, Query
+from pydantic import BaseModel
+from typing import Annotated
+
+name = 'Pydantic PyCharm Plugin'
+class Item(BaseModel):
+    name: str
+    description: str | None = None
+    price: float
+    tax: float | None = None
+
 
 app = FastAPI()
 
-class ModelName(str, Enum):
-    alexnet = "alexnet"
-    resnet = "resnet"
-    lenet = "lenet"
-@app.get("/name/{name}")
-async def root(model_name: ModelName):
-    if model_name is ModelName.alexnet:
-        return {'model_name': 'alexnet', 'message': 'Deep Learning FTW!'}
-    if model_name.value == ModelName.resnet:
-        return {'model_name': 'resnet', 'message': 'LeCNN all the images'}
 
-    return {'model_name': 'lenet', 'message': 'Have some residuals'}
-@app.get("/files/{file_path:path}")
-async def read_file(file_path: str):
-    return {"file_path": file_path}
+@app.post('/items/{items}')
+async def first_post(items_id: int, item: Item, q: str | None = None):
+    if q:
+        return {'q': q}
+
+    return {'items_id': items_id, **item.dict()}
+
+
+
+@app.get("/items/")
+async def read_items(q: Annotated[list[str] | None, Query()] = None):
+    query_items = {"q": q}
+    return query_items
